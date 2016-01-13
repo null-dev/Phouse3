@@ -48,31 +48,22 @@ public class CalibrationActivity extends AppCompatActivity {
         mouseManager = new MouseManager();
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordLayout);
+
+        View.OnLongClickListener defaultListener = v -> {
+            onLongClickCalib(v);
+            return false;
+        };
+
         topButton = (Button) findViewById(R.id.topBtn);
-        topButton.setOnLongClickListener(v -> {
-            onLongClickCalib(v);
-            return false;
-        });
+        topButton.setOnLongClickListener(defaultListener);
         leftButton = (Button) findViewById(R.id.leftBtn);
-        leftButton.setOnLongClickListener(v -> {
-            onLongClickCalib(v);
-            return false;
-        });
+        leftButton.setOnLongClickListener(defaultListener);
         neutralButton = (Button) findViewById(R.id.neutralBtn);
-        neutralButton.setOnLongClickListener(v -> {
-            onLongClickCalib(v);
-            return false;
-        });
+        neutralButton.setOnLongClickListener(defaultListener);
         rightButton = (Button) findViewById(R.id.rightBtn);
-        rightButton.setOnLongClickListener(v -> {
-            onLongClickCalib(v);
-            return false;
-        });
+        rightButton.setOnLongClickListener(defaultListener);
         bottomButton = (Button) findViewById(R.id.bottomBtn);
-        bottomButton.setOnLongClickListener(v -> {
-            onLongClickCalib(v);
-            return false;
-        });
+        bottomButton.setOnLongClickListener(defaultListener);
 
         provider = new CalibratedGyroscopeProvider((SensorManager) getSystemService(SENSOR_SERVICE));
         provider.start();
