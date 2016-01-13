@@ -6,6 +6,8 @@ package xyz.nulldev.phouse3.gson;
  * Author: hc
  */
 
+import org.apache.commons.math3.analysis.polynomials.PolynomialFunctionLagrangeForm;
+
 import xyz.nulldev.phouse3.SHARED.FastMousePacket;
 import xyz.nulldev.phouse3.math.EulerAngles;
 
@@ -27,8 +29,19 @@ public class MouseManager {
     EulerAngles bottomMost;
     boolean calibrated = false;
     //Percentage from 0 - 1
+    float origX;
+    float origY;
     float x;
     float y;
+    int upComp = 0;
+    int leftComp = 0;
+    int bottomComp = 0;
+    int rightComp = 0;
+    double[] xxPoints = null;
+    double[] xyPoints = {0, 0.5, 1};
+    double[] yxPoints = null;
+    double[] yyPoints = {0, 0.5, 1};
+    boolean disableInterpolation = false;
 
     public MouseManager() {}
 
@@ -42,12 +55,40 @@ public class MouseManager {
     }
 
     public void update(EulerAngles update) {
-        x = (update.getYaw() - leftMost.getYaw())/(rightMost.getYaw() - leftMost.getYaw());
-        y = (update.getPitch() - topMost.getPitch())/(bottomMost.getPitch() - topMost.getPitch());
+        origX = (update.getYaw() - leftMost.getYaw())/(rightMost.getYaw() - leftMost.getYaw());
+        x = (float) PolynomialFunctionLagrangeForm.evaluate(xxPoints, xyPoints, update.getYaw());
+        if(update.getYaw() > neutral.getYaw()) {
+            //Right
+            x += calcParabola(x, rightComp);
+        } else if(update.getYaw() < neutral.getYaw()) {
+            //Left
+            x -= calcParabola(x, leftComp);
+        }
+        origY = (update.getPitch() - topMost.getPitch())/(bottomMost.getPitch() - topMost.getPitch());
+        y = (float) PolynomialFunctionLagrangeForm.evaluate(yxPoints, yyPoints, update.getPitch());
+        if(update.getPitch() > neutral.getPitch()) {
+            //Down
+            y += calcParabola(y, bottomComp);
+        } else if(update.getPitch() < neutral.getPitch()) {
+            //Up
+            y -= calcParabola(y, upComp);
+        }
+    }
+
+    public static float calcParabola(float original, float compensation) {
+        //Log.i(Constants.TAG, "APPLYING: " + adjustCompensation(compensation) * (original*original));
+        return adjustCompensation(compensation) * (original*original);
+    }
+
+    public static float adjustCompensation(float compensation) {
+        return compensation/500;
     }
 
     public FastMousePacket constructPacket() {
-        return new FastMousePacket(x, y);
+        if (disableInterpolation)
+            return new FastMousePacket(origX, origY);
+        else
+            return new FastMousePacket(x, y);
     }
 
     public EulerAngles getNeutral() {
@@ -96,6 +137,11 @@ public class MouseManager {
 
     public void setCalibrated(boolean calibrated) {
         this.calibrated = calibrated;
+        //Setup arrays
+        if(calibrated) {
+            xxPoints = new double[]{getLeftMost().getYaw(), getNeutral().getYaw(), getRightMost().getYaw()};
+            yxPoints = new double[]{getTopMost().getPitch(), getNeutral().getPitch(), getBottomMost().getPitch()};
+        }
     }
 
     public float getX() {
@@ -112,5 +158,61 @@ public class MouseManager {
 
     public void setY(float y) {
         this.y = y;
+    }
+
+    public float getOrigX() {
+        return origX;
+    }
+
+    public void setOrigX(float origX) {
+        this.origX = origX;
+    }
+
+    public float getOrigY() {
+        return origY;
+    }
+
+    public void setOrigY(float origY) {
+        this.origY = origY;
+    }
+
+    public int getUpComp() {
+        return upComp;
+    }
+
+    public void setUpComp(int upComp) {
+        this.upComp = upComp;
+    }
+
+    public int getLeftComp() {
+        return leftComp;
+    }
+
+    public void setLeftComp(int leftComp) {
+        this.leftComp = leftComp;
+    }
+
+    public int getBottomComp() {
+        return bottomComp;
+    }
+
+    public void setBottomComp(int bottomComp) {
+        this.bottomComp = bottomComp;
+    }
+
+    public int getRightComp() {
+        return rightComp;
+    }
+
+    public void setRightComp(int rightComp) {
+        this.rightComp = rightComp;
+    }
+
+    public boolean isDisableInterpolation() {
+        return disableInterpolation;
+    }
+
+    public void setDisableInterpolation(boolean disableInterpolation) {
+        this.disableInterpolation = disableInterpolation;
     }
 }

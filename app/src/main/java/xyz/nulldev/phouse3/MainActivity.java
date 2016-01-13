@@ -11,22 +11,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.IOException;
 
 import rx.Observable;
 import rx.Subscriber;
+import xyz.nulldev.phouse3.SHARED.FastKeyPacket;
 import xyz.nulldev.phouse3.concurrent.DialogObservable;
 import xyz.nulldev.phouse3.concurrent.QueuedBlockingObservableObject;
+import xyz.nulldev.phouse3.gson.MouseManager;
 import xyz.nulldev.phouse3.io.WIFIClient;
 import xyz.nulldev.phouse3.math.EulerAngles;
-import xyz.nulldev.phouse3.gson.MouseManager;
 import xyz.nulldev.phouse3.sensor.PollingGyroEngine;
 import xyz.nulldev.phouse3.ui.PlayPauseFAB;
+import xyz.nulldev.phouse3.ui.VirtualKeyboardButton;
 import xyz.nulldev.phouse3.util.ConcurrencyUtils;
 import xyz.nulldev.phouse3.util.ContextUtils;
 import xyz.nulldev.phouse3.util.Utils;
@@ -39,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
     TextView debugTextView;
     QueuedBlockingObservableObject<WIFIClient> wifiClient = new QueuedBlockingObservableObject<>();
     PollingGyroEngine gyroEngine;
-    MouseManager mouseManager;
+    MouseManager mouseManager = null;
+    VirtualKeyboardButton keyboardButton;
+    SeekBar upComp;
+    SeekBar leftComp;
+    SeekBar bottomComp;
+    SeekBar rightComp;
+    Switch pauseDebugSwitch;
+    Switch disableInterpolationSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 new DialogObservable(MainActivity.this, "IP", "Please enter the ip to connect to!", "IP", "Ok", true)
                         .subscribe(new Subscriber<String>() {
                             @Override
-                            public void onCompleted() {
-                            }
+                            public void onCompleted() {}
 
                             @Override
                             public void onError(Throwable e) {
@@ -135,26 +144,75 @@ public class MainActivity extends AppCompatActivity {
 
         errorLayout = (LinearLayout) findViewById(R.id.errorLayout);
         controlsLayout = (RelativeLayout) findViewById(R.id.controlsLayout);
+        keyboardButton = (VirtualKeyboardButton) findViewById(R.id.keyboardView);
 
         debugTextView = (TextView) findViewById(R.id.debugTextView);
+        pauseDebugSwitch = (Switch) findViewById(R.id.pauseDebugSwitch);
+        disableInterpolationSwitch = (Switch) findViewById(R.id.disableInterpolationSwitch);
+        disableInterpolationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> mouseManager.setDisableInterpolation(isChecked));
 
-        findViewById(R.id.clickButton).setOnTouchListener(new View.OnTouchListener() {
+        SeekBar.OnSeekBarChangeListener defaultListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if(wifiClient != null && wifiClient.get() != null) {
-                        wifiClient.get().write(new byte[]{6,0,0,0,0,0,0,0,0,0});
-                    }
-                } else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    if(wifiClient != null && wifiClient.get() != null) {
-                        wifiClient.get().write(new byte[]{7,0,0,0,0,0,0,0,0,0});
-                    }
-                }
-                return false;
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                updateComp(seekBar, progress);
             }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                updateComp(seekBar, seekBar.getProgress());
+            }
+        };
+
+        (upComp = (SeekBar) findViewById(R.id.upComp)).setOnSeekBarChangeListener(defaultListener);
+        (leftComp = (SeekBar) findViewById(R.id.leftComp)).setOnSeekBarChangeListener(defaultListener);
+        (bottomComp = (SeekBar) findViewById(R.id.btmComp)).setOnSeekBarChangeListener(defaultListener);
+        (rightComp = (SeekBar) findViewById(R.id.rightComp)).setOnSeekBarChangeListener(defaultListener);
+
+        findViewById(R.id.leftClickButton).setOnTouchListener((v, event) -> {
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                if(wifiClient != null && wifiClient.get() != null) {
+                    wifiClient.get().write(new byte[]{6,0,0,0,0,0,0,0,0,0});
+                }
+            } else if(event.getAction() == MotionEvent.ACTION_UP) {
+                if(wifiClient != null && wifiClient.get() != null) {
+                    wifiClient.get().write(new byte[]{7,0,0,0,0,0,0,0,0,0});
+                }
+            }
+            return false;
+        });
+
+        findViewById(R.id.rightClickButton).setOnTouchListener((v, event) -> {
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                if(wifiClient != null && wifiClient.get() != null) {
+                    wifiClient.get().write(new byte[]{8,0,0,0,0,0,0,0,0,0});
+                }
+            } else if(event.getAction() == MotionEvent.ACTION_UP) {
+                if(wifiClient != null && wifiClient.get() != null) {
+                    wifiClient.get().write(new byte[]{9,0,0,0,0,0,0,0,0,0});
+                }
+            }
+            return false;
         });
 
         updateUIOnDisconnect();
+    }
+
+    void updateComp(SeekBar view, int progress) {
+        Log.i(Constants.TAG, "COMPENSATION: " + progress);
+        if(mouseManager != null) {
+            if(view.equals(upComp)) {
+                mouseManager.setUpComp(progress);
+            } else if(view.equals(leftComp)) {
+                mouseManager.setLeftComp(progress);
+            } else if(view.equals(bottomComp)) {
+                mouseManager.setBottomComp(progress);
+            } else if(view.equals(rightComp)) {
+                mouseManager.setRightComp(progress);
+            }
+        }
     }
 
     @Override
@@ -176,7 +234,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void updateDebugInfo(String message) {
-        debugTextView.setText(message);
+        if (!pauseDebugSwitch.isChecked())
+            debugTextView.setText(message);
     }
 
     void updateUIOnDisconnect() {
@@ -197,11 +256,35 @@ public class MainActivity extends AppCompatActivity {
                 mouseManager.update(angles);
                 float x = mouseManager.getX();
                 float y = mouseManager.getY();
-                ConcurrencyUtils.runOnUiThread(() -> updateDebugInfo("DEBUG: X: " + x + ", Y: " + y));
+                ConcurrencyUtils.runOnUiThread(() -> updateDebugInfo("DEBUG: X: " + x + ", Y: " + y + ", LINEAR-X: " + mouseManager.getOrigX() + ", LINEAR-Y: " + mouseManager.getOrigY()));
                 wifiClient.get().write(mouseManager.constructPacket().asPacket());
             }
             return true;
         });
+        if(keyboardButton != null) {
+            keyboardButton.setKeyboardListener(new VirtualKeyboardButton.KeyboardListener() {
+                @Override
+                public void onBackspace() {
+                    if(wifiClient != null && wifiClient.get() != null) {
+                        wifiClient.get().write(new byte[]{11,0,0,0,0,0,0,0,0,0});
+                    }
+                }
+
+                @Override
+                public void onEnter() {
+                    if(wifiClient != null && wifiClient.get() != null) {
+                        wifiClient.get().write(new byte[]{12,0,0,0,0,0,0,0,0,0});
+                    }
+                }
+
+                @Override
+                public void onKeyPress(char c) {
+                    if(wifiClient != null && wifiClient.get() != null) {
+                        wifiClient.get().write(new FastKeyPacket(c).asPacket());
+                    }
+                }
+            });
+        }
     }
 
     void stopAll() {
@@ -217,6 +300,9 @@ public class MainActivity extends AppCompatActivity {
         if(gyroEngine != null) {
             gyroEngine.destroy();
             gyroEngine = null;
+        }
+        if(keyboardButton != null) {
+            keyboardButton.setKeyboardListener(null);
         }
     }
 
