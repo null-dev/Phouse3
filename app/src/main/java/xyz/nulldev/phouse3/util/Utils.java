@@ -1,5 +1,8 @@
 package xyz.nulldev.phouse3.util;
 
+import android.content.Context;
+import android.content.res.Configuration;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -32,41 +35,9 @@ public class Utils {
         return newArray;
     }
 
-    public static double getLargest(double a1, double a2) {
-        if(a1 > a2) {
-            return a1;
-        } else {
-            return a2;
-        }
-    }
-
-    public static double getSmallest(double a1, double a2) {
-        if(a1 < a2) {
-            return a1;
-        } else {
-            return a2;
-        }
-    }
-
-    public static float getLargest(float a1, float a2) {
-        if(a1 > a2) {
-            return a1;
-        } else {
-            return a2;
-        }
-    }
-
-    public static float getSmallest(float a1, float a2) {
-        if(a1 < a2) {
-            return a1;
-        } else {
-            return a2;
-        }
-    }
-
     public static double wrapAround(double d, double min, double max) {
-        double rMin = getSmallest(min, max);
-        double rMax = getLargest(min, max);
+        double rMin = Math.min(min, max);
+        double rMax = Math.max(min, max);
         double diff = rMax - rMin;
         //Return the min/max immediately
         if(diff == 0) return rMin;
@@ -81,5 +52,11 @@ public class Utils {
 
     public static double addWithWrapping(double orig, double toAdd, double min, double max) {
         return wrapAround(orig + toAdd, min, max);
+    }
+
+    public static boolean isTablet(Context context) {
+        return (context.getResources().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK)
+                >= Configuration.SCREENLAYOUT_SIZE_LARGE;
     }
 }

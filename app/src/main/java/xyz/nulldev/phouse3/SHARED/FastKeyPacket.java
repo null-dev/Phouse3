@@ -3,7 +3,7 @@ package xyz.nulldev.phouse3.SHARED;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import xyz.nulldev.phouse3.Constants;
@@ -47,7 +47,7 @@ public class FastKeyPacket {
         byte length = buffer[1];
         byte[] charBytes = new byte[length];
         System.arraycopy(buffer, 2, charBytes, 0, length);
-        return new FastKeyPacket(new String(charBytes, StandardCharsets.UTF_8).toCharArray()[0]);
+        return new FastKeyPacket(new String(charBytes, Charset.forName("UTF-8")).toCharArray()[0]);
     }
 
     public char getKey() {

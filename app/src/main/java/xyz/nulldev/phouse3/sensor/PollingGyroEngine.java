@@ -15,12 +15,11 @@ import xyz.nulldev.phouse3.concurrent.OnChangeListener;
  * Created: 14/12/15
  * Author: hc
  */
-//TODO Automatic anti-gimbal lock
 public class PollingGyroEngine {
 
     public static final int POLLING_INTERVAL = 50;
 
-    CalibratedGyroscopeProvider gyroProvider;
+    OrientationProvider gyroProvider;
     SensorManager sensorManager;
     ObservableObject<GyroscopeResult> result = new ObservableObject<>();
     ObservableObject<GyroscopeResult> tmpResult = null;
@@ -30,6 +29,8 @@ public class PollingGyroEngine {
     public PollingGyroEngine(SensorManager sensorManager) {
         this.sensorManager = sensorManager;
         gyroProvider = new CalibratedGyroscopeProvider(sensorManager);
+//        gyroProvider = new ImprovedOrientationSensor1Provider(sensorManager);
+//        gyroProvider = new AccelerometerCompassProvider(sensorManager);
         gyroProvider.start();
         internalPoller = new InternalPoller();
         internalPollerThread = new Thread(internalPoller,

@@ -55,9 +55,9 @@ public class EulerAngles {
     }
 
     public EulerAngles diff(EulerAngles other) {
-        float newYaw = Utils.getLargest(yaw, other.getYaw()) - Utils.getSmallest(yaw, other.getYaw());
-        float newPitch = Utils.getLargest(pitch, other.getPitch()) - Utils.getSmallest(pitch, other.getPitch());
-        float newRoll = Utils.getLargest(roll, other.getRoll()) - Utils.getSmallest(roll, other.getRoll());
+        float newYaw = Math.max(yaw, other.getYaw()) - Math.min(yaw, other.getYaw());
+        float newPitch = Math.max(pitch, other.getPitch()) - Math.min(pitch, other.getPitch());
+        float newRoll = Math.max(roll, other.getRoll()) - Math.min(roll, other.getRoll());
         return new EulerAngles(newYaw, newPitch, newRoll);
     }
 

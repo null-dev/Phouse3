@@ -12,14 +12,20 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class ConcurrencyUtils {
     static Handler handler = null;
+
     public static void runOnUiThread(Runnable r) {
-        if(handler == null) handler = new Handler(Looper.getMainLooper());
-        handler.post(r);
+        if (Looper.getMainLooper().equals(Looper.myLooper())) {
+            r.run();
+        } else {
+            if (handler == null) handler = new Handler(Looper.getMainLooper());
+            handler.post(r);
+        }
     }
 
     static ScheduledThreadPoolExecutor executorService = null;
+
     public static ScheduledThreadPoolExecutor initOrGetExecutorService() {
-        if(executorService == null) executorService = new ScheduledThreadPoolExecutor(8);
+        if (executorService == null) executorService = new ScheduledThreadPoolExecutor(8);
         return executorService;
     }
 

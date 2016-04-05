@@ -3,9 +3,7 @@ package xyz.nulldev.phouse3.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.util.Log;
 
-import xyz.nulldev.phouse3.Constants;
 import xyz.nulldev.phouse3.math.Quaternion;
 
 /**
@@ -23,8 +21,8 @@ public class CalibratedGyroscopeProvider extends OrientationProvider {
     /**
      * Reset every once in a while
      */
-    private static final int RESET_INCREMENT = 500;
-    private int checks = 0;
+//    private static final int RESET_INCREMENT = 500;
+//    private int checks = 0;
 
     /**
      * Constant specifying the factor between a Nano-second and a second
@@ -80,13 +78,13 @@ public class CalibratedGyroscopeProvider extends OrientationProvider {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        checks += 1;
-        if(checks >= RESET_INCREMENT) {
-            checks = 0;
-            stop();
-            start();
-            Log.i(Constants.TAG, "[CGP] RESET!");
-        }
+//        checks += 1;
+//        if(checks >= RESET_INCREMENT) {
+//            checks = 0;
+//            stop();
+//            start();
+//            Log.i(Constants.TAG, "[CGP] RESET!");
+//        }
 
         // we received a sensor event. it is a good practice to check
         // that we received the proper event
